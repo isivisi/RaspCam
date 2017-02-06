@@ -7,9 +7,8 @@ setup(
     author_email='jiannandrea@gmail.com',
     url='http://github.com/isivisi/camera',
     install_requires=[
-        'ffmpy',
         'picamera',
-        'opencv-python'
+        'tornado'
     ],
     include_package_data=True,
     version='0.1.4',

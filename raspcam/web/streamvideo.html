@@ -1,0 +1,63 @@
+<html>
+    <head>
+
+        <title>MultiCam Home</title>
+
+        <link rel="stylesheet" href="{{ static_url("css/normalize.css") }}">
+        <link rel="stylesheet" href="{{ static_url("css/skeleton.css") }}">
+        <link rel="stylesheet" href="{{ static_url("css/custom.css") }}">
+    </head>
+
+    <body>
+
+        <header>
+            <div class="container u-full-width">
+                <div class="row">
+                    <div class="four columns logo">RaspCam</div>
+                    <div class="four columns"></div>
+                    <div class="one columns headerMenuLink">Test</div>
+                    <div class="one columns headerMenuLink">Test</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container feedHolder u-full-width">
+
+            <div class="row">
+
+                <div class="six columns u-full-width feed">
+
+                    <img class="feedImg" src="{{ static_url('feed/liveFeed.png') }}">
+
+                    <div class="container cameraInfo">
+                         <div class="row">
+                             <div class="six columns">
+                                 Camera name
+                             </div>
+                             <div class="six columns">
+                                 Edit
+                             </div>
+                         </div>
+                    </div>
+
+                </div>
+
+                <div class="six columns u-full-width feed">
+                    <img class="feedImg" src="{{ static_url('feed/liveFeed.png') }}">
+                    Camera name
+                </div>
+            </div>
+            <div class="row">
+                <div class="six columns u-full-width feed">
+                    <img class="feedImg" src="{{ static_url('feed/liveFeed.png') }}">
+                    Camera name
+                </div>
+                <div class="six columns u-full-width feed">
+                    <img class="feedImg" src="{{ static_url('feed/liveFeed.png') }}">
+                    Camera name
+                </div>
+            </div>
+        </div>
+    </body>
+
+</html>

@@ -15,6 +15,8 @@ class Camera:
     def set(self, key, value):
         raise NotImplementedError("Cannot call abstract method")
 
+    def getImage(self, file):
+        raise NotImplementedError("Cannot call abstract method")
 
 class PICam(Camera):
     def __init__(self):
@@ -22,6 +24,9 @@ class PICam(Camera):
             super().__init__("pi")
             picamera.PiCamera.resolution(self.resolution)
             picamera.PiCamera.framerate(self.framerate)
+
+    def getImage(self, file):
+        return picamera.PiCamera.capture(format='png', use_video_port=True, resize=self.resolution)
 
     def streamCamera(self, port):
         ssock = socket.socket()
@@ -34,26 +39,4 @@ class PICam(Camera):
                 picamera.PiCamera.start_recording(connectionAsFile, format=self.format)
             finally:
                 connectionAsFile.close()
-                ssock.close()
-
-# might have to just save frame to image and update page D:
-class CVCam(Camera):
-    def __init__(self):
-        super().__init__("cv")
-
-    def streamCamera(self, port):
-        ssock = socket.socket()
-        ssock.bind(('0.0.0.0', port))
-        ssock.listen(0)
-
-        while True:
-            connectionAsFile = ssock.accept()[0].makefile("wb")
-            vcapture = cv2.VideoCapture(0)
-            video = cv2.VideoWriter(connectionAsFile.fileno(), -1, 25, self.resolution)
-            try:
-                while True:
-                    f,img = vcapture.read()
-                    video.write(img)
-            finally:
-                video.release()
                 ssock.close()
