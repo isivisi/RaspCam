@@ -41,3 +41,7 @@ body {
     min-width: 478px;
 }
 
+.login {
+    margin-left: auto;
+    margin-right: auto;
+}

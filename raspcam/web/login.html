@@ -1,0 +1,45 @@
+<html>
+    <head>
+
+        <title>RaspCam Login</title>
+
+        <link rel="stylesheet" href="{{ static_url("css/normalize.css") }}">
+        <link rel="stylesheet" href="{{ static_url("css/skeleton.css") }}">
+        <link rel="stylesheet" href="{{ static_url("css/custom.css") }}">
+    </head>
+
+    <body>
+
+        <header>
+            <div class="container u-full-width">
+                <div class="row">
+                    <div class="two columns logo">RaspCam</div>
+                    <div class="eight columns">Raspberry Pi Camera System</div>
+                    <div class="one columns headerMenuLink">Cameras</div>
+                    <div class="one columns headerMenuLink">Login</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container feedHolder u-full-width">
+            <div class="row u-full-width">
+                <div class="twelve columns">
+                    <form method="post" action="/login">
+                            <table class="login">
+                                <tr>
+                                    <td>Login</td>
+                                    <td><input type="text" name="username" value=""/></td>
+                                </tr>
+                                <tr>
+                                    <td>Password</td>
+                                    <td><input type="password" name="password" value=""/></td>
+                                </tr>
+                            </table>
+                            <input class="login" type="submit" value="Begin Session"/>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>
