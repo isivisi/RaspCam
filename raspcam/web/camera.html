@@ -1,0 +1,33 @@
+<html>
+    <head>
+
+        <title>RaspCam Home</title>
+
+        <link rel="stylesheet" href="{{ static_url("css/normalize.css") }}">
+        <link rel="stylesheet" href="{{ static_url("css/skeleton.css") }}">
+        <link rel="stylesheet" href="{{ static_url("css/custom.css") }}">
+    </head>
+
+    <body>
+
+        <header>
+            <div class="container u-full-width">
+                <div class="row">
+                    <div class="two columns logo">RaspCam</div>
+                    <div class="eight columns">Raspberry Pi Camera System</div>
+                    <div class="one columns headerMenuLink">Cameras</div>
+                    <div class="one columns headerMenuLink">Login</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container feedHolder u-full-width">
+            <div class="row">
+                <div class="twelve columns u-full-width">
+                    <img class="feedImg" src="{{ static_url('feed/liveFeed.png') }}", width="1920" height="1080">
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>

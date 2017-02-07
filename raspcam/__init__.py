@@ -30,10 +30,16 @@ def make_app():
 
     return tornado.web.Application([
         (r"/", MainHandler),
+        (r"/camera/.*", CameraHandler)
     ], **settings)
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("web/streamvideo.html")
+        self.render("web/index.html")
+
+# Specific camera view
+class CameraHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render("web/camera.html")
 
 main()
