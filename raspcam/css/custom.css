@@ -5,9 +5,14 @@
 }
 
 .feed {
-    height:300px;
-    margin-top: 15px;
-    margin-bottom: 15px;
+    height:252px;
+    margin-bottom: 40px;
+}
+
+.cameraInfo {
+    background-color: #333333;
+    color: #fff;
+    padding: 5px;
 }
 
 .logo {
@@ -33,5 +38,6 @@ body {
 .feedHolder {
     padding: 15px;
     background: #F9F9F9;
+    min-width: 478px;
 }
 
