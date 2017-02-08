@@ -1,15 +1,21 @@
 import picamera
-import cv2              # opencv-python package
+#import cv2              # opencv-python package
 import socket
+import io
+import time
 
 class Camera:
     def __init__(self, type):
         self.type = type
-        self.resolution = (320, 240)
+        self.resolution = (480, 270)
         self.framerate = 30
         self.format = 'h264'
+        self.stream = io.BytesIO()
 
-    def streamCamera(self, port):
+    def startRecord(self, fileName):
+        raise NotImplementedError("Cannot call abstract method")
+
+    def stopRecord(self):
         raise NotImplementedError("Cannot call abstract method")
 
     def set(self, key, value):
@@ -18,25 +24,39 @@ class Camera:
     def getImage(self, file):
         raise NotImplementedError("Cannot call abstract method")
 
+    def streamCamera(self, file):
+        raise NotImplementedError("Cannot call abstract method")
+
 class PICam(Camera):
     def __init__(self):
-        def __init__(self):
-            super().__init__("pi")
-            picamera.PiCamera.resolution(self.resolution)
-            picamera.PiCamera.framerate(self.framerate)
+        super().__init__("pi")
+        startT = time.time()
+        self.camera = picamera.PiCamera()
+        print ("Camera initialized in %s" % str(time.time() - startT))
+        self.camera.resolution = self.resolution
 
-    def getImage(self, file):
-        return picamera.PiCamera.capture(format='png', use_video_port=True, resize=self.resolution)
+    def getImage(self):
+        stream = io.BytesIO()
+        self.camera.capture(stream, format='jpeg', use_video_port=True)
+        return stream
 
-    def streamCamera(self, port):
-        ssock = socket.socket()
-        ssock.bind(('0.0.0.0', port))
-        ssock.listen(0)
+    #def streamImage(self, file):
+    #    stream = io.BytesIO()
+    #    for foo in self.camera.capture_continuous(stream, format='jpeg', use_video_port=True):
+    #        stream.truncate()
+    #        stream.seek(0)
+    #        with open(file, 'wb') as w:
+    #            w.write(stream.read())
 
-        while True:
-            connectionAsFile = ssock.accept()[0].makefile("wb")
-            try:
-                picamera.PiCamera.start_recording(connectionAsFile, format=self.format)
-            finally:
-                connectionAsFile.close()
-                ssock.close()
+    def startRecord(self, fileName):
+        self.camera.start_recording(fileName)
+
+    def stopRecord(self):
+        self.camera.stop_recording()
+
+    def streamCamera(self):
+        self.camera.startRecord(self.stream, format=self.format, quality=23)
+
+    def __del__(self):
+        self.camera.close()
+        print("Camera closed properly")
