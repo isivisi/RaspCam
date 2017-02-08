@@ -5,26 +5,66 @@ import sqlite3
 import hashlib
 import uuid
 import os
+import raspcam.models
+import uuid
 
 databaseFilename = "raspcam.db"
 
 # Sets up the default database state
 def default():
     conn = sqlite3.connect(databaseFilename)
+    conn.execute('''CREATE TABLE settings (key TEXT,
+                    value TEXT)''')
     conn.execute('''CREATE TABLE users (userId INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT,
                     password TEXT,
                     salt TEXT)''')
-    conn.execute('''CREATE TABLE cameras (name text,
-                    lastKnownLocation text)''')
+    conn.execute('''CREATE TABLE cameras (name TEXT,
+                    lastKnownLocation TEXT,
+                    privacy BOOLEAN,
+                    uniqueid TEXT PRIMARY KEY)''')
 
     # Create default admin user
     passwordData = hashPass("admin")
     t = (passwordData["hash"], passwordData["salt"],)
     conn.execute('''INSERT INTO users (username, password, salt) VALUES ('admin', ?, ?)''', t)
 
+    # Setup settings
+    t = ("port", "8888")
+    conn.execute('''INSERT INTO settings (key, value) VALUES (?,?)''',t)
+
     conn.commit()
     conn.close()
+
+    # Default camera built into pi
+    createCamera("Main Camera", "/feed/", 0, str(uuid.uuid4()))
+
+def changeSetting(key, value):
+    conn = sqlite3.connect(databaseFilename)
+    t = (key,value,key,)
+    conn.execute('''UPDATE settings key = ?, value = ? WHERE key = ?)''', t)
+
+def getSetting(key):
+    conn = sqlite3.connect(databaseFilename)
+    t = (key,)
+    for row in conn.execute('''SELECT value FROM settings WHERE key = ?''', t):
+        return row[0]
+    return None
+
+def createCamera(name, location, privacy, uniqueid):
+    conn = sqlite3.connect(databaseFilename)
+    t = (name,location,privacy,uniqueid,)
+    conn.execute('''INSERT INTO cameras (name, lastKnownLocation, privacy, uniqueid) VALUES (?,?,?,?)''', t)
+    conn.commit()
+    conn.close()
+
+def getCameras():
+    conn = sqlite3.connect(databaseFilename)
+    cams = []
+    for row in conn.execute('''SELECT * FROM cameras'''):
+        cams.append(raspcam.models.Camera(row[0], row[1], row[2], row[3]))
+    return cams
+
 
 # Checks if username and password are in the database. This function takes in the unhashed password.
 def userCheck(username, password):

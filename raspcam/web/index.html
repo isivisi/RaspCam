@@ -22,26 +22,27 @@
         </header>
 
         <div class="container feedHolder u-full-width">
-
-            <div class="row">
-
-                <div class="six columns u-full-width feed">
-                    <!--<video class="feedImg" width="1080" controls>
-                        <source src="feed/liveFeed.h264" type="video/h264">
-                    </video> -->
-                    <img id="update" class="feedImg" src="feed/"/>
-                    <script>
-
-                        setInterval(function() {
-                            document.getElementById("update").src = 'feed/?' + + new Date().getTime();
-                        }, 100);
-                    </script>
-                    <div class="row cameraInfo">
-                        <div class="six columns">Camera name</div>
-                        <div class="six columns"></div>
-                    </div>
+            {% for list in cameras %}
+                <div class="row">
+                    {% for cam in list %}
+                        <div class="six columns u-full-width feed">
+                            <!--<video class="feedImg" width="1080" controls>
+                                <source src="feed/liveFeed.h264" type="video/h264">
+                            </video> -->
+                            <img id="update-{{ escape(cam.name) }}" class="feedImg" src="{{ escape(cam.location) }}"/>
+                            <script>
+                                setInterval(function() {
+                                    document.getElementById("update-{{ escape(cam.name) }}").src = '{{ escape(cam.location) }}?' + + new Date().getTime();
+                                }, 100);
+                            </script>
+                            <div class="row cameraInfo">
+                                <div class="six columns">{{ escape(cam.name) }}</div>
+                                <div class="six columns"></div>
+                            </div>
+                        </div>
+                    {% end %}
                 </div>
-            </div>
+            {% end %}
         </div>
     </body>
 

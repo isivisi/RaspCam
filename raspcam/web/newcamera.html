@@ -1,0 +1,54 @@
+<html>
+    <head>
+
+        <title>RaspCam Home</title>
+
+        <link rel="stylesheet" href="{{ static_url("css/normalize.css") }}">
+        <link rel="stylesheet" href="{{ static_url("css/skeleton.css") }}">
+        <link rel="stylesheet" href="{{ static_url("css/custom.css") }}">
+    </head>
+
+    <body>
+
+        <header>
+            <div class="container u-full-width">
+                <div class="row">
+                    <div class="two columns logo">RaspCam</div>
+                    <div class="eight columns">Raspberry Pi Camera System</div>
+                    <div class="one columns headerMenuLink">Cameras</div>
+                    <div class="one columns headerMenuLink">Login</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container feedHolder u-full-width">
+            <div class="row">
+                <div class="twelve columns u-full-width">
+                    <form method="post" action="/camera/add">
+                        <center><h5>Add a remote RaspCam to your setup</h5></center>
+                        <table class="login">
+                                <tr>
+                                    <td>Camera name</td>
+                                    <td><input type="text" name="cameraName" value=""/></td>
+                                </tr>
+                                <tr>
+                                    <td>Camera IP</td>
+                                    <td><input type="text" name="ip" value=""/></td>
+                                </tr>
+                                <tr>
+                                    <td>Camera Port</td>
+                                    <td><input type="text" name="port" value=""/></td>
+                                </tr>
+                                <tr>
+                                    <center>
+                                        <td><input type="submit" value="Add Camera"/></td>
+                                    </center>
+                                </tr>
+                            </table>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>
