@@ -4,22 +4,27 @@
 
 import raspcam.camera
 import raspcam.models
+import raspcam.database
+import raspcam.iccom
 import threading
 import time
 import tornado
 import tornado.ioloop
 import tornado.web
-import raspcam.database
+import tornado.gen
+from tornado.concurrent import run_on_executor
+from concurrent.futures import ThreadPoolExecutor
 import os
 import uuid
 import signal
+import psutil           # for cpu info
 
 cam = raspcam.camera.PICam()
 performLoop = True
 
 # Create app
 def main():
-    port = int(database.getSetting("port"))
+    port = int(database.getSetting("Port"))
     app = make_app()
     app.listen(port)
     print("Starting web application on port %s" % port)
@@ -46,8 +51,10 @@ def make_app():
         (r"/", MainHandler),
         (r'/login', LoginHandler),
         (r"/camera/(.*)", CameraHandler),
+        (r"/settings", SettingsHandler),
         #(r'/feed/(.*)', tornado.web.StaticFileHandler, {'path': os.path.dirname(__file__) + '/feed'}),
-        (r'/feed/.*', FeedHandler)
+        (r'/feed/.*', FeedHandler),
+        (r'/system/', SystemHandler)
     ], **settings)
 
 # Handles the main webpage
@@ -102,13 +109,43 @@ class LoginHandler(tornado.web.RequestHandler):
         print("Failed login attempt for user %s" % username)
         self.redirect("/login")
 
+class SettingsHandler(tornado.web.RequestHandler):
+    def get(self):
+        if self.get_secure_cookie("user"):
+            userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
+            # Only serve settings page to admin users
+            if userInfo and userInfo.isAdmin:
+                settings = database.getSettings()
+                self.render("web/settings.html", settings=settings)
+                return
+        self.redirect("/login")
+
+    def post(self):
+        if self.get_secure_cookie("user"):
+            userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
+            # Only change settings if user is admin
+            print(userInfo.isAdmin)
+            if userInfo and userInfo.isAdmin:
+                for arg in self.request.arguments.keys():
+                    database.changeSetting(arg, self.request.arguments[arg])
+                return
+        self.redirect('/login')
+
+
+class SystemHandler(tornado.web.RequestHandler):
+    def get(self):
+        ram = format(float(psutil.virtual_memory().used / psutil.virtual_memory().total), '.2f')
+        text = "cpu: %s ram: %s" % (psutil.cpu_percent(), ram)
+        self.set_header('Content-length', len(text))
+        self.write(text)
+
 # Grab image from camera upon request
 class FeedHandler(tornado.web.RequestHandler):
     def get(self):
         # returns the image in bytes
         imageStream = cam.getImage()
         bytes = imageStream.getvalue()
-        # setup headers so the webbrowser know how to deal with our dats
+        # setup headers so the webbrowser know how to deal with our data
         self.set_header('Content-type', 'image/jpg')
         self.set_header('Content-length', len(bytes))
         self.write(bytes)

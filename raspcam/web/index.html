@@ -29,11 +29,16 @@
                             <!--<video class="feedImg" width="1080" controls>
                                 <source src="feed/liveFeed.h264" type="video/h264">
                             </video> -->
-                            <img id="update-{{ escape(cam.name) }}" class="feedImg" src="{{ escape(cam.location) }}"/>
+                            {% if cam.location == "/feed/" %}
+                                <a href="/camera/">
+                            {% else %}
+                                <a href="{{escape(cam.location.replace('feed/', '') + 'camera/')}}">
+                            {% end %}
+                                    <img id="update-{{ escape(cam.name) }}" class="feedImg" src="{{ escape(cam.location) }}"/></a>
                             <script>
                                 setInterval(function() {
                                     document.getElementById("update-{{ escape(cam.name) }}").src = '{{ escape(cam.location) }}?' + + new Date().getTime();
-                                }, 100);
+                                }, 300);
                             </script>
                             <div class="row cameraInfo">
                                 <div class="six columns">{{ escape(cam.name) }}</div>
@@ -43,6 +48,25 @@
                     {% end %}
                 </div>
             {% end %}
+        </div>
+
+        <div class="container u-full-width">
+            <footer>
+                <script>
+                // system stats update
+                setInterval(function() {
+                     var hr = new XMLHttpRequest();
+                     hr.onreadystatechange = function() {
+                        if (hr.readyState == 4 && hr.status == 200) {
+                            document.getElementById("system").innerHTML = hr.responseText;
+                        }
+                     }
+                     hr.open("GET", "system/", true);
+                     hr.send(null);
+                }, 1000);
+                </script>
+                <div id="system"></div>
+            </footer>
         </div>
     </body>
 

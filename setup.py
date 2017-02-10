@@ -8,7 +8,8 @@ setup(
     url='http://github.com/isivisi/camera',
     install_requires=[
         'picamera',
-        'tornado'
+        'tornado',
+        'psutil'
     ],
     include_package_data=True,
     version='0.1.4',

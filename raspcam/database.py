@@ -14,11 +14,14 @@ databaseFilename = "raspcam.db"
 def default():
     conn = sqlite3.connect(databaseFilename)
     conn.execute('''CREATE TABLE settings (key TEXT,
-                    value TEXT)''')
+                    value TEXT,
+                    type TEXT,
+                    canModify BOOLEAN)''')
     conn.execute('''CREATE TABLE users (userId INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT,
+                    username TEXT UNIQUE,
                     password TEXT,
-                    salt TEXT)''')
+                    salt TEXT,
+                    isAdmin BOOLEAN)''')
     conn.execute('''CREATE TABLE cameras (name TEXT,
                     lastKnownLocation TEXT,
                     privacy BOOLEAN,
@@ -26,23 +29,29 @@ def default():
 
     # Create default admin user
     passwordData = hashPass("admin")
-    t = (passwordData["hash"], passwordData["salt"],)
-    conn.execute('''INSERT INTO users (username, password, salt) VALUES ('admin', ?, ?)''', t)
+    t = (passwordData["hash"], passwordData["salt"],1)
+    conn.execute('''INSERT INTO users (username, password, salt, isAdmin) VALUES ('admin',?,?,?)''', t)
 
     # Setup settings
-    t = ("port", "8888")
-    conn.execute('''INSERT INTO settings (key, value) VALUES (?,?)''',t)
+    t = ("Hub", "0", 'bool', 1)
+    conn.execute('''INSERT INTO settings (key, value, type, canModify) VALUES (?,?,?,?)''', t)
+    t = ("Port", "8888", 'string', 1)
+    conn.execute('''INSERT INTO settings (key, value, type, canModify) VALUES (?,?,?,?)''',t)
+
+    defaultCamid = str(uuid.uuid4())
+    t = ("localCamera", defaultCamid, 'string', 0)
+    conn.execute('''INSERT INTO settings (key, value, type, canModify) VALUES (?,?,?,?)''', t)
 
     conn.commit()
     conn.close()
 
     # Default camera built into pi
-    createCamera("Main Camera", "/feed/", 0, str(uuid.uuid4()))
+    createCamera("Main Camera", "/feed/", 0, defaultCamid)
 
 def changeSetting(key, value):
     conn = sqlite3.connect(databaseFilename)
-    t = (key,value,key,)
-    conn.execute('''UPDATE settings key = ?, value = ? WHERE key = ?)''', t)
+    t = (key,str(value),key,)
+    conn.execute('''UPDATE settings SET key = ?, value = ? WHERE key = ?''', t)
 
 def getSetting(key):
     conn = sqlite3.connect(databaseFilename)
@@ -51,6 +60,15 @@ def getSetting(key):
         return row[0]
     return None
 
+# returns all settings in their KeyValuePair form
+def getSettings():
+    conn = sqlite3.connect(databaseFilename)
+    keyvals = []
+    for row in conn.execute('''SELECT * FROM settings'''):
+        keyvals.append(raspcam.models.KeyValuePair(row[0], row[1], row[2]))
+    return keyvals
+
+# Might not need
 def createCamera(name, location, privacy, uniqueid):
     conn = sqlite3.connect(databaseFilename)
     t = (name,location,privacy,uniqueid,)
@@ -58,13 +76,26 @@ def createCamera(name, location, privacy, uniqueid):
     conn.commit()
     conn.close()
 
+def getCamera(uniqueId):
+    conn = sqlite3.connect(databaseFilename)
+    t = (uniqueId,)
+    for row in conn.execute('''SELECT * FROM cameras WHERE uniqueId = ?'''):
+        return raspcam.models.Camera(row[0], row[1], row[2], row[3])
+
+def getUser(username):
+    conn = sqlite3.connect(databaseFilename)
+    t = (username,)
+    for row in conn.execute('''SELECT * FROM users WHERE username =?''', t):
+        return raspcam.models.User(row[0], row[1], row[4]) # exclude password and salt. use userCheck for that
+    print("No user found")
+    return None
+
 def getCameras():
     conn = sqlite3.connect(databaseFilename)
     cams = []
     for row in conn.execute('''SELECT * FROM cameras'''):
         cams.append(raspcam.models.Camera(row[0], row[1], row[2], row[3]))
     return cams
-
 
 # Checks if username and password are in the database. This function takes in the unhashed password.
 def userCheck(username, password):

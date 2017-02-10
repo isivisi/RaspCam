@@ -27,6 +27,15 @@ header {
     Font-Size: 15px;
 }
 
+footer {
+    background-color: #263238;
+    color: #F9F9F9;
+}
+
+#system {
+float: right;
+}
+
 .headerMenuLink:hover {
     background-color: #263238;
 }
