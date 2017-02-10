@@ -37,6 +37,8 @@ def default():
     conn.execute('''INSERT INTO settings (key, value, type, canModify) VALUES (?,?,?,?)''', t)
     t = ("Port", "8888", 'string', 1)
     conn.execute('''INSERT INTO settings (key, value, type, canModify) VALUES (?,?,?,?)''',t)
+    t = ("firstStart", "1", 'bool', 0)
+    conn.execute('''INSERT INTO settings (key, value, type, canModify) VALUES (?,?,?,?)''', t)
 
     defaultCamid = str(uuid.uuid4())
     t = ("localCamera", defaultCamid, 'string', 0)
@@ -52,6 +54,8 @@ def changeSetting(key, value):
     conn = sqlite3.connect(databaseFilename)
     t = (key,str(value),key,)
     conn.execute('''UPDATE settings SET key = ?, value = ? WHERE key = ?''', t)
+    conn.commit()
+    conn.close()
 
 def getSetting(key):
     conn = sqlite3.connect(databaseFilename)
@@ -65,7 +69,7 @@ def getSettings():
     conn = sqlite3.connect(databaseFilename)
     keyvals = []
     for row in conn.execute('''SELECT * FROM settings'''):
-        keyvals.append(raspcam.models.KeyValuePair(row[0], row[1], row[2]))
+        keyvals.append(raspcam.models.KeyValuePair(row[0], row[1], row[2], row[3]))
     return keyvals
 
 # Might not need

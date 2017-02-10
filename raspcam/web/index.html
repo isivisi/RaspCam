@@ -15,8 +15,8 @@
                 <div class="row">
                     <div class="two columns logo">RaspCam</div>
                     <div class="eight columns">Raspberry Pi Camera System</div>
-                    <div class="one columns headerMenuLink">Cameras</div>
-                    <div class="one columns headerMenuLink">Login</div>
+                    <div class="one columns headerMenuLink"><a href="/">Cameras</a></div>
+                    <div class="one columns headerMenuLink"><a href="/login">Login</a></div>
                 </div>
             </div>
         </header>
@@ -38,7 +38,7 @@
                             <script>
                                 setInterval(function() {
                                     document.getElementById("update-{{ escape(cam.name) }}").src = '{{ escape(cam.location) }}?' + + new Date().getTime();
-                                }, 300);
+                                }, 150);
                             </script>
                             <div class="row cameraInfo">
                                 <div class="six columns">{{ escape(cam.name) }}</div>

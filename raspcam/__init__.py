@@ -19,7 +19,11 @@ import uuid
 import signal
 import psutil           # for cpu info
 
-cam = raspcam.camera.PICam()
+try:
+    cam = raspcam.camera.PICam()
+except:
+    cam = None
+    print("Camera does not exist, have you enabled the pi camera using the raspi-config command?")
 performLoop = True
 
 # Create app
@@ -54,8 +58,22 @@ def make_app():
         (r"/settings", SettingsHandler),
         #(r'/feed/(.*)', tornado.web.StaticFileHandler, {'path': os.path.dirname(__file__) + '/feed'}),
         (r'/feed/.*', FeedHandler),
-        (r'/system/', SystemHandler)
+        (r'/system/', SystemHandler),
+        ('/firststart/(.*)', firstStartHandler)
     ], **settings)
+
+class firstStartHandler(tornado.web.RequestHandler):
+    def get(self, page):
+        if page == 'ishub':
+            database.changeSetting("Hub", "1")
+            database.changeSetting("firstStart", "0")
+        elif page == "isextra":
+            database.changeSetting("Hub", "0")
+            database.changeSetting("firstStart", "0")
+        else:
+            self.render('web/firststart.html')
+            return
+        self.redirect('/camera/')
 
 # Handles the main webpage
 class MainHandler(tornado.web.RequestHandler):
@@ -65,72 +83,79 @@ class MainHandler(tornado.web.RequestHandler):
         #    self.redirect("/login")
         #    return
 
-        # grab camera details and split them into arrays of two for visual purposes
-        cameras = database.getCameras()
-        cameras = [cameras[i:i + 2] for i in range(0, len(cameras), 2)]
-        self.render("web/index.html", cameras=cameras)
+        if database.getSetting("firstStart") == "1":
+            self.redirect("/firststart/")
+        elif database.getSetting("Hub") == "1":
+            # grab camera details and split them into arrays of two for visual purposes
+            cameras = database.getCameras()
+            cameras = [cameras[i:i + 2] for i in range(0, len(cameras), 2)]
+            self.render("web/index.html", cameras=cameras)
 
 # Specific camera view
 class CameraHandler(tornado.web.RequestHandler):
     def get(self, page):
-        if page == "new":
+        if page == "new" and database.getSetting("Hub") == "1":
             self.render('web/newcamera.html')
         else:
             self.render("web/camera.html")
 
     def post(self, page):
-        camName = self.get_argument("cameraName")
-        ip = self.get_argument("ip")
-        port = self.get_argument("port")
+        if database.getSetting("Hub") == "1":
+            camName = self.get_argument("cameraName")
+            ip = self.get_argument("ip")
+            port = self.get_argument("port")
 
-        if camName and ip and port:
-            location = '%s:%s/feed/' % (ip, port,)
-            database.createCamera(camName, location, 0, str(uuid.uuid4()))
-            print("New camera location added")
-            self.redirect('/')
-            return
-        self.redirect("/camera/new")
+            if camName and ip and port:
+                location = '%s:%s/feed/' % (ip, port,)
+                database.createCamera(camName, location, 0, str(uuid.uuid4()))
+                print("New camera location added")
+                self.redirect('/')
+                return
+            self.redirect("/camera/new")
 
 # Handles login page and sets up session
 class LoginHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("web/login.html")
+        if database.getSetting("Hub") == "1":
+            self.render("web/login.html")
 
     def post(self):
-        username = self.get_argument("username")
-        password = self.get_argument("password")
-        if username != "" and password != "":
-            #If user information was correct give them a secure cookie so we can identify what user they are later.
-            if raspcam.database.userCheck(username, password):
-                self.set_secure_cookie("user", username)
-                print("Login successful for user %s" % username)
-                self.redirect("/")
-                return
-        print("Failed login attempt for user %s" % username)
-        self.redirect("/login")
+        if database.getSetting("Hub") == "1":
+            username = self.get_argument("username")
+            password = self.get_argument("password")
+            if username != "" and password != "":
+                #If user information was correct give them a secure cookie so we can identify what user they are later.
+                if raspcam.database.userCheck(username, password):
+                    self.set_secure_cookie("user", username)
+                    print("Login successful for user %s" % username)
+                    self.redirect("/")
+                    return
+            print("Failed login attempt for user %s" % username)
+            self.redirect("/login")
 
 class SettingsHandler(tornado.web.RequestHandler):
     def get(self):
-        if self.get_secure_cookie("user"):
-            userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
-            # Only serve settings page to admin users
-            if userInfo and userInfo.isAdmin:
-                settings = database.getSettings()
-                self.render("web/settings.html", settings=settings)
-                return
-        self.redirect("/login")
+        if database.getSetting("Hub") == "1":
+            if self.get_secure_cookie("user"):
+                userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
+                # Only serve settings page to admin users
+                if userInfo and userInfo.isAdmin:
+                    settings = database.getSettings()
+                    self.render("web/settings.html", settings=settings)
+                    return
+            self.redirect("/login")
 
     def post(self):
-        if self.get_secure_cookie("user"):
-            userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
-            # Only change settings if user is admin
-            print(userInfo.isAdmin)
-            if userInfo and userInfo.isAdmin:
-                for arg in self.request.arguments.keys():
-                    database.changeSetting(arg, self.request.arguments[arg])
-                return
-        self.redirect('/login')
-
+        if database.getSetting("Hub") == "1":
+            if self.get_secure_cookie("user"):
+                userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
+                # Only change settings if user is admin
+                if userInfo and userInfo.isAdmin:
+                    for arg in self.request.arguments.keys():
+                        database.changeSetting(arg, self.request.arguments[arg][0].decode("utf-8"))
+                    self.redirect('/')
+                    return
+            self.redirect('/login')
 
 class SystemHandler(tornado.web.RequestHandler):
     def get(self):
@@ -143,11 +168,14 @@ class SystemHandler(tornado.web.RequestHandler):
 class FeedHandler(tornado.web.RequestHandler):
     def get(self):
         # returns the image in bytes
-        imageStream = cam.getImage()
-        bytes = imageStream.getvalue()
-        # setup headers so the webbrowser know how to deal with our data
-        self.set_header('Content-type', 'image/jpg')
-        self.set_header('Content-length', len(bytes))
-        self.write(bytes)
+        if cam:
+            imageStream = cam.getImage()
+            bytes = imageStream.getvalue()
+            # setup headers so the webbrowser know how to deal with our data
+            self.set_header('Content-type', 'image/jpg')
+            self.set_header('Content-length', len(bytes))
+            self.write(bytes)
+            return
+        self.write("Camera not available")
 
 main()

@@ -16,7 +16,8 @@ class User:
         self.isAdmin = isAdmin
 
 class KeyValuePair:
-    def __init__(self, key, value, type):
+    def __init__(self, key, value, type, isVisible):
         self.key = key
         self.value = value
         self.type = type
+        self.isVisible = isVisible
