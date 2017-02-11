@@ -22,6 +22,17 @@
         </header>
 
         <div class="container feedHolder u-full-width">
+
+            <script>
+                // used to update when image had loaded completely
+                function preloadImg(src, callback){
+                    var img = new Image();
+                    img.onload = callback
+                    img.src = src
+                }
+
+            </script>
+
             {% for list in cameras %}
                 <div class="row">
                     {% for cam in list %}

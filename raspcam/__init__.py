@@ -166,16 +166,24 @@ class SystemHandler(tornado.web.RequestHandler):
 
 # Grab image from camera upon request
 class FeedHandler(tornado.web.RequestHandler):
+    executor = ThreadPoolExecutor(max_workers=16)
+
+    @run_on_executor
+    def runGetCam(self):
+        return cam.lastStream.getvalue()
+
+    @tornado.gen.coroutine
     def get(self):
         # returns the image in bytes
         if cam:
-            imageStream = cam.getImage()
-            bytes = imageStream.getvalue()
+            bytes = yield self.runGetCam()
             # setup headers so the webbrowser know how to deal with our data
             self.set_header('Content-type', 'image/jpg')
             self.set_header('Content-length', len(bytes))
             self.write(bytes)
+            self.finish()
             return
         self.write("Camera not available")
+        self.finish()
 
 main()
