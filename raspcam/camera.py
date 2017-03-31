@@ -1,9 +1,15 @@
-import picamera
 #import cv2              # opencv-python package
 import socket
 import io
 import time
 import threading
+
+# for debugging without a raspberry pi
+NOT_PI = False
+try:
+	import picamera
+except:
+	NON_PI = True
 
 class Camera:
     def __init__(self, type):
@@ -38,11 +44,13 @@ class PICam(Camera):
         self.camera.resolution = self.resolution
 
         # Begin camera loop
-        threading.Thread(target=self.getImageLoop).start()
+        if not NON_PI:
+            threading.Thread(target=self.getImageLoop).start()
 
     def getImage(self):
         stream = io.BytesIO()
-        self.camera.capture(stream, format='jpeg', use_video_port=True)
+        if not NON_PI:
+            self.camera.capture(stream, format='jpeg', use_video_port=True)
         return stream
 
     def getImageLoop(self):
@@ -73,5 +81,6 @@ class PICam(Camera):
         self.camera.startRecord(self.stream, format=self.format, quality=23)
 
     def __del__(self):
-        self.camera.close()
-        print("Camera closed properly")
+        if not NON_PI:
+            self.camera.close()
+            print("Camera closed properly")
