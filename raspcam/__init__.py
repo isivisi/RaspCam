@@ -29,7 +29,7 @@ performLoop = True
 
 # Create app
 def main():
-    port = int(database.getSettings()["Port"])
+    port = int(database.getSettings()["port"])
     app = make_app()
     app.listen(port)
     print("Starting web application on port %s" % port)
