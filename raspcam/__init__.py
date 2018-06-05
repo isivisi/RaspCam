@@ -21,8 +21,9 @@ import psutil           # for cpu info
 
 try:
     cam = raspcam.camera.PICam()
-except:
+except Exception as e:
     cam = None
+    print(e)
     print("Camera does not exist, have you enabled the pi camera using the raspi-config command?")
 performLoop = True
 

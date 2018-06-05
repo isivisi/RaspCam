@@ -3,6 +3,7 @@ import socket
 import io
 import time
 import threading
+import raspcam.database
 
 # for debugging without a raspberry pi
 NOT_PI = False
@@ -42,6 +43,10 @@ class PICam(Camera):
         self.camera = picamera.PiCamera()
         print ("Camera initialized in %s" % str(time.time() - startT))
         self.camera.resolution = self.resolution
+
+        # set saved settings
+        camSettings = raspcam.database.getCameras(local=True)[0]
+        self.camera.rotation = camSettings.rotation
 
         # Begin camera loop
         if not NON_PI:

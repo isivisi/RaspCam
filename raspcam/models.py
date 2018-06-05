@@ -1,9 +1,10 @@
 class Camera:
-    def __init__(self, name, location, privacy, uniqueid):
+    def __init__(self, name, location, privacy, uniqueid, rotation):
         self.name = name
         self.location = location
         self.privacy = privacy
         self.uniqueid = uniqueid
+        self.rotation = rotation
 
     def __str__(self):
         return "%s,%s,%s,%s" % (self.name, self.location, self.privacy, self.uniqueid)

@@ -25,7 +25,8 @@ def default():
     conn.execute('''CREATE TABLE cameras (name TEXT,
                     lastKnownLocation TEXT,
                     privacy BOOLEAN,
-                    uniqueid TEXT PRIMARY KEY)''')
+                    uniqueid TEXT PRIMARY KEY,
+                    rotation INTEGER)''')
 
     # Create default admin user
     passwordData = hashPass("admin")
@@ -48,7 +49,7 @@ def default():
     conn.close()
 
     # Default camera built into pi
-    createCamera("Main Camera", "/feed/", 0, defaultCamid)
+    createCamera("Main Camera", "/feed/", 0, defaultCamid, 0)
 
 def changeSetting(key, value):
     conn = sqlite3.connect(databaseFilename)
@@ -73,10 +74,10 @@ def getSettings():
     return keyvals
 
 # Might not need
-def createCamera(name, location, privacy, uniqueid):
+def createCamera(name, location, privacy, uniqueid, rotation=0):
     conn = sqlite3.connect(databaseFilename)
-    t = (name,location,privacy,uniqueid,)
-    conn.execute('''INSERT INTO cameras (name, lastKnownLocation, privacy, uniqueid) VALUES (?,?,?,?)''', t)
+    t = (name,location,privacy,uniqueid,rotation,)
+    conn.execute('''INSERT INTO cameras (name, lastKnownLocation, privacy, uniqueid, rotation) VALUES (?,?,?,?,?)''', t)
     conn.commit()
     conn.close()
 
@@ -94,11 +95,12 @@ def getUser(username):
     print("No user found")
     return None
 
-def getCameras():
+def getCameras(local=False):
     conn = sqlite3.connect(databaseFilename)
     cams = []
-    for row in conn.execute('''SELECT * FROM cameras'''):
-        cams.append(raspcam.models.Camera(row[0], row[1], row[2], row[3]))
+    for row in conn.execute('''SELECT * FROM cameras''') if not local else \
+            conn.execute('''SELECT * FROM cameras WHERE uniqueid = ?''', (getSetting("localCamera"),)):
+        cams.append(raspcam.models.Camera(row[0], row[1], row[2], row[3], row[4]))
     return cams
 
 # Checks if username and password are in the database. This function takes in the unhashed password.
