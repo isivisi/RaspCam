@@ -100,13 +100,13 @@ class MainHandler(tornado.web.RequestHandler):
 # Specific camera view
 class CameraHandler(tornado.web.RequestHandler):
     def get(self, page):
-        if page == "new" and database.getSetting("Hub") == "1":
+        if page == "new" and database.getSettings()["isHub"] == True:
             self.render('web/newcamera.html')
         else:
             self.render("web/camera.html")
 
     def post(self, page):
-        if database.getSetting("Hub") == "1":
+        if database.getSettings()["isHub"] == True:
             camName = self.get_argument("cameraName")
             ip = self.get_argument("ip")
             port = self.get_argument("port")
@@ -122,11 +122,11 @@ class CameraHandler(tornado.web.RequestHandler):
 # Handles login page and sets up session
 class LoginHandler(tornado.web.RequestHandler):
     def get(self):
-        if database.getSetting("Hub") == "1":
+        if database.getSettings()["isHub"] == True:
             self.render("web/login.html")
 
     def post(self):
-        if database.getSetting("Hub") == "1":
+        if database.getSettings()["isHub"] == True:
             username = self.get_argument("username")
             password = self.get_argument("password")
             if username != "" and password != "":
@@ -141,7 +141,7 @@ class LoginHandler(tornado.web.RequestHandler):
 
 class SettingsHandler(tornado.web.RequestHandler):
     def get(self):
-        if database.getSetting("Hub") == "1":
+        if database.getSettings()["isHub"] == True:
             if self.get_secure_cookie("user"):
                 userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
                 # Only serve settings page to admin users
@@ -152,13 +152,16 @@ class SettingsHandler(tornado.web.RequestHandler):
             self.redirect("/login")
 
     def post(self):
-        if database.getSetting("Hub") == "1":
+        if database.getSettings()["isHub"] == True:
             if self.get_secure_cookie("user"):
                 userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
                 # Only change settings if user is admin
-                if userInfo and userInfo.isAdmin:
+                if userInfo and userInfo['isAdmin']:
+                    settings = database.getSettings()
                     for arg in self.request.arguments.keys():
-                        database.changeSetting(arg, self.request.arguments[arg][0].decode("utf-8"))
+                        settings[arg] = self.request.arguments[arg][0].decode("utf-8")
+
+                    database.saveSettings(settings)
                     self.redirect('/')
                     return
             self.redirect('/login')
