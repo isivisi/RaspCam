@@ -29,7 +29,7 @@ performLoop = True
 
 # Create app
 def main():
-    port = int(database.getSetting("Port"))
+    port = int(database.getSettings()["Port"])
     app = make_app()
     app.listen(port)
     print("Starting web application on port %s" % port)
@@ -65,12 +65,15 @@ def make_app():
 
 class firstStartHandler(tornado.web.RequestHandler):
     def get(self, page):
+        settings = database.getSettings()
         if page == 'ishub':
-            database.changeSetting("Hub", "1")
-            database.changeSetting("firstStart", "0")
+            settings["isHub"] = True
+            settings["setup"] = False
+            database.saveSettings(settings)
         elif page == "isextra":
-            database.changeSetting("Hub", "0")
-            database.changeSetting("firstStart", "0")
+            settings["isHub"] = False
+            settings["setup"] = False
+            database.saveSettings(settings)
         else:
             self.render('web/firststart.html')
             return
@@ -84,9 +87,11 @@ class MainHandler(tornado.web.RequestHandler):
         #    self.redirect("/login")
         #    return
 
-        if database.getSetting("firstStart") == "1":
+        settings = database.getSettings()
+
+        if settings['setup'] == True:
             self.redirect("/firststart/")
-        elif database.getSetting("Hub") == "1":
+        elif settings["isHub"] == True:
             # grab camera details and split them into arrays of two for visual purposes
             cameras = database.getCameras()
             cameras = [cameras[i:i + 2] for i in range(0, len(cameras), 2)]
