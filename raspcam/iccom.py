@@ -8,6 +8,8 @@ import time
 import raspcam.database
 import threading
 
+broadcast_message = 'iccom_raspcam_broadcast'
+
 class ICCom:
     def __init__(self, isHub, port):
         self.isHub = isHub
@@ -15,12 +17,15 @@ class ICCom:
         self.foundCameras = []
         self.foundHub = False
 
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.s.settimeout(5)
+        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
         self.localCam = raspcam.database.getCamera(raspcam.database.getSetting("localCamera"))
 
     def broadcast(self, msg):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        s.sendto(msg.encode('utf-8'), ('255.255.255.255', self.port))
+        self.s.sendto(msg.encode('utf-8'), ('255.255.255.255', self.port))
 
     def listen(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -52,7 +57,7 @@ class ICCom:
             print("Waiting for hub...")
             while 1:
                 data = self.listen()
-                if data[0] == "GETCAMERA":
+                if data[0] == broadcast_message:
                     #send camera data to hub asking for it
                     self.foundHub = True
                     self.send(str(self.localCam), data[1])
@@ -62,7 +67,7 @@ class ICCom:
         print("Beginning camera search...")
         while 1:
             time.sleep(5)
-            self.broadcast("GETCAMERA")
+            self.broadcast(broadcast_message)
 
 
 
