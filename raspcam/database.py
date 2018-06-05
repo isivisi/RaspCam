@@ -7,46 +7,38 @@ import uuid
 import os
 import raspcam.models
 import uuid
+import json
 
-databaseFilename = "raspcam.db"
+databaseFilename = "raspcam.json"
 
 # Sets up the default database state
 def default():
-    conn = sqlite3.connect(databaseFilename)
-    conn.execute('''CREATE TABLE settings (key TEXT,
-                    value TEXT,
-                    type TEXT,
-                    canModify BOOLEAN)''')
-    conn.execute('''CREATE TABLE users (userId INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT UNIQUE,
-                    password TEXT,
-                    salt TEXT,
-                    isAdmin BOOLEAN)''')
-    conn.execute('''CREATE TABLE cameras (name TEXT,
-                    lastKnownLocation TEXT,
-                    privacy BOOLEAN,
-                    uniqueid TEXT PRIMARY KEY,
-                    rotation INTEGER)''')
 
-    # Create default admin user
-    passwordData = hashPass("admin")
-    t = (passwordData["hash"], passwordData["salt"],1)
-    conn.execute('''INSERT INTO users (username, password, salt, isAdmin) VALUES ('admin',?,?,?)''', t)
+    # default json settings
+    settings = {
+        "isHub": True,
+        "setup": True,
+        "port":8080,
+        "users":[
+            {
+                "userName":"admin",
+                "password":"admin"
+            }
+        ],
+        "cameras": [
+            {
+                "name":"Camera Name",
+                "ip": "127.0.0.1",
+                "port": 8080
+            }
+         ]
+    }
 
-    # Setup settings
-    t = ("Hub", "0", 'bool', 1)
-    conn.execute('''INSERT INTO settings (key, value, type, canModify) VALUES (?,?,?,?)''', t)
-    t = ("Port", "8888", 'string', 1)
-    conn.execute('''INSERT INTO settings (key, value, type, canModify) VALUES (?,?,?,?)''',t)
-    t = ("firstStart", "1", 'bool', 0)
-    conn.execute('''INSERT INTO settings (key, value, type, canModify) VALUES (?,?,?,?)''', t)
+    # write json file in pwd
+    with open(databaseFilename, 'w') as fp:
+        json.dump(settings, fp)
 
     defaultCamid = str(uuid.uuid4())
-    t = ("localCamera", defaultCamid, 'string', 0)
-    conn.execute('''INSERT INTO settings (key, value, type, canModify) VALUES (?,?,?,?)''', t)
-
-    conn.commit()
-    conn.close()
 
     # Default camera built into pi
     createCamera("Main Camera", "/feed/", 0, defaultCamid, 0)
