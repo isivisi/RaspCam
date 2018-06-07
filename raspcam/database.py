@@ -63,7 +63,8 @@ def createCamera(name, location, privacy, uniqueid, rotation=0):
         'name':name,
         'location':location,
         'privacy':privacy,
-        'rotation':rotation
+        'rotation':rotation,
+        'localCamera':False
     })
 
     saveSettings(settings)
@@ -73,12 +74,12 @@ def getCamera(uniqueId):
     settings = getSettings()
 
     # list comprehension ftw
-    return [x for x in settings['cameras'] if x['uniqueid'] == uniqueId]
+    return next(x for x in settings['cameras'] if x['uniqueid'] == uniqueId)
 
 def getUser(username):
     settings = getSettings()
 
-    return [x for x in settings['users'] if x['username'] == username]
+    return next(x for x in settings['users'] if x['userName'] == username)
 
 def getCameras(local=False):
     settings = getSettings()
@@ -90,7 +91,7 @@ def userCheck(username, password):
     settings = getSettings()
     passwordHashed = hashPass(password)
 
-    foundUser = [x for x in settings['users'] if x['password'] == passwordHashed]
+    foundUser = next(x for x in settings['users'] if x['password'] == passwordHashed)
     if foundUser:
         return True
     return False

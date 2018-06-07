@@ -89,13 +89,17 @@ class MainHandler(tornado.web.RequestHandler):
 
         settings = database.getSettings()
 
+        user = database.getUser(self.get_secure_cookie("user").decode("utf-8")) if self.get_secure_cookie("user") != None else None
+
         if settings['setup'] == True:
             self.redirect("/firststart/")
         elif settings["isHub"] == True:
             # grab camera details and split them into arrays of two for visual purposes
             cameras = database.getCameras()
+            if user:
+                cameras.append({'name':'_addCam'}) # todo: better solution :p
             cameras = [cameras[i:i + 2] for i in range(0, len(cameras), 2)]
-            self.render("web/index.html", cameras=cameras)
+            self.render("web/index.html", cameras=cameras, user=user)
 
 # Specific camera view
 class CameraHandler(tornado.web.RequestHandler):
