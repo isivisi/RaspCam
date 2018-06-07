@@ -36,26 +36,30 @@
             {% for list in cameras %}
                 <div class="row">
                     {% for cam in list %}
-                        <div class="six columns u-full-width feed">
-                            <!--<video class="feedImg" width="1080" controls>
-                                <source src="feed/liveFeed.h264" type="video/h264">
-                            </video> -->
-                            {% if cam.location == "/feed/" %}
-                                <a href="/camera/">
-                            {% else %}
-                                <a href="{{escape(cam.location.replace('feed/', '') + 'camera/')}}">
-                            {% end %}
-                                    <img id="update-{{ escape(cam.name) }}" class="feedImg" src="{{ escape(cam.location) }}"/></a>
-                            <script>
-                                setInterval(function() {
-                                    document.getElementById("update-{{ escape(cam.name) }}").src = '{{ escape(cam.location) }}?' + + new Date().getTime();
-                                }, 150);
-                            </script>
-                            <div class="row cameraInfo">
-                                <div class="six columns">{{ escape(cam.name) }}</div>
-                                <div class="six columns"></div>
+                        {% if cam['name'] == '_addCam' %}
+                            <a href="/camera/new"><div class="six columns u-full-width addCam"> <p>Add Camera</p></div></a>
+                        {% else %}
+                            <div class="six columns u-full-width feed">
+                                <!--<video class="feedImg" width="1080" controls>
+                                    <source src="feed/liveFeed.h264" type="video/h264">
+                                </video> -->
+                                {% if cam['localCamera'] == True %}
+                                    <a href="/camera/">
+                                {% else %}
+                                    <a href="http://{{escape(cam['location'].replace('feed/', '') + 'camera/')}}">
+                                {% end %}
+                                        <img id="update-{{ escape(cam['name']) }}" class="feedImg" src="{{ escape(cam['location']) }}"/></a>
+                                <script>
+                                    setInterval(function() {
+                                        document.getElementById("update-{{ escape(cam['name']) }}").src = '{{ escape(cam['location']) }}?' + + new Date().getTime();
+                                    }, 150);
+                                </script>
+                                <div class="row cameraInfo">
+                                    <div class="six columns">{{ escape(cam['name']) }}</div>
+                                    <div class="six columns"></div>
+                                </div>
                             </div>
-                        </div>
+                        {% end %}
                     {% end %}
                 </div>
             {% end %}

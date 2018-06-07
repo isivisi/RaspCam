@@ -29,7 +29,7 @@ performLoop = True
 
 # Create app
 def main():
-    port = int(database.getSetting("Port"))
+    port = int(database.getSettings()["port"])
     app = make_app()
     app.listen(port)
     print("Starting web application on port %s" % port)
@@ -65,12 +65,15 @@ def make_app():
 
 class firstStartHandler(tornado.web.RequestHandler):
     def get(self, page):
+        settings = database.getSettings()
         if page == 'ishub':
-            database.changeSetting("Hub", "1")
-            database.changeSetting("firstStart", "0")
+            settings["isHub"] = True
+            settings["setup"] = False
+            database.saveSettings(settings)
         elif page == "isextra":
-            database.changeSetting("Hub", "0")
-            database.changeSetting("firstStart", "0")
+            settings["isHub"] = False
+            settings["setup"] = False
+            database.saveSettings(settings)
         else:
             self.render('web/firststart.html')
             return
@@ -84,24 +87,30 @@ class MainHandler(tornado.web.RequestHandler):
         #    self.redirect("/login")
         #    return
 
-        if database.getSetting("firstStart") == "1":
+        settings = database.getSettings()
+
+        user = database.getUser(self.get_secure_cookie("user").decode("utf-8")) if self.get_secure_cookie("user") != None else None
+
+        if settings['setup'] == True:
             self.redirect("/firststart/")
-        elif database.getSetting("Hub") == "1":
+        elif settings["isHub"] == True:
             # grab camera details and split them into arrays of two for visual purposes
             cameras = database.getCameras()
+            if user:
+                cameras.append({'name':'_addCam'}) # todo: better solution :p
             cameras = [cameras[i:i + 2] for i in range(0, len(cameras), 2)]
-            self.render("web/index.html", cameras=cameras)
+            self.render("web/index.html", cameras=cameras, user=user)
 
 # Specific camera view
 class CameraHandler(tornado.web.RequestHandler):
     def get(self, page):
-        if page == "new" and database.getSetting("Hub") == "1":
+        if page == "new" and database.getSettings()["isHub"] == True:
             self.render('web/newcamera.html')
         else:
             self.render("web/camera.html")
 
     def post(self, page):
-        if database.getSetting("Hub") == "1":
+        if database.getSettings()["isHub"] == True:
             camName = self.get_argument("cameraName")
             ip = self.get_argument("ip")
             port = self.get_argument("port")
@@ -117,11 +126,11 @@ class CameraHandler(tornado.web.RequestHandler):
 # Handles login page and sets up session
 class LoginHandler(tornado.web.RequestHandler):
     def get(self):
-        if database.getSetting("Hub") == "1":
+        if database.getSettings()["isHub"] == True:
             self.render("web/login.html")
 
     def post(self):
-        if database.getSetting("Hub") == "1":
+        if database.getSettings()["isHub"] == True:
             username = self.get_argument("username")
             password = self.get_argument("password")
             if username != "" and password != "":
@@ -136,7 +145,7 @@ class LoginHandler(tornado.web.RequestHandler):
 
 class SettingsHandler(tornado.web.RequestHandler):
     def get(self):
-        if database.getSetting("Hub") == "1":
+        if database.getSettings()["isHub"] == True:
             if self.get_secure_cookie("user"):
                 userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
                 # Only serve settings page to admin users
@@ -147,13 +156,16 @@ class SettingsHandler(tornado.web.RequestHandler):
             self.redirect("/login")
 
     def post(self):
-        if database.getSetting("Hub") == "1":
+        if database.getSettings()["isHub"] == True:
             if self.get_secure_cookie("user"):
                 userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
                 # Only change settings if user is admin
-                if userInfo and userInfo.isAdmin:
+                if userInfo and userInfo['isAdmin']:
+                    settings = database.getSettings()
                     for arg in self.request.arguments.keys():
-                        database.changeSetting(arg, self.request.arguments[arg][0].decode("utf-8"))
+                        settings[arg] = self.request.arguments[arg][0].decode("utf-8")
+
+                    database.saveSettings(settings)
                     self.redirect('/')
                     return
             self.redirect('/login')

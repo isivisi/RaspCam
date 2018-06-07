@@ -9,6 +9,22 @@
     margin-bottom: 40px;
 }
 
+.addCam {
+    height:252px;
+    margin-bottom: 40px;
+    background-color: #5050501c;
+    background-image: url("images/icons8-add-50.png");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.addCam p {
+    text-align: center;
+    vertical-align: middle;
+    margin-top:160px;
+    color: #263238;
+}
+
 .cameraInfo {
     background-color: #333333;
     color: #fff;
@@ -36,7 +52,11 @@ footer {
 float: right;
 }
 
-.headerMenuLink:hover {
+.headerMenuLink .headerMenuLink:link .headerMenuLink:visited .headerMenuLink:active a {
+    color:#c5c5c5;
+}
+
+.headerMenuLink:hover a:hover {
     background-color: #263238;
 }
 
