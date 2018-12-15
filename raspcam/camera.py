@@ -45,9 +45,9 @@ class PICam(Camera):
         self.camera.resolution = self.resolution
 
         # set saved settings
-        camSettings = raspcam.database.getCameras(local=True)[0]
-        if camSettings:
-            self.camera.rotation = camSettings.rotation
+        #camSettings = raspcam.database.getCameras(local=True)[0]
+        #if camSettings:
+        #    self.camera.rotation = camSettings.rotation
 
         # Begin camera loop
         if not NON_PI:
