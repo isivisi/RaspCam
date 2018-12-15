@@ -50,9 +50,15 @@
                                 {% end %}
                                         <img id="update-{{ escape(cam['name']) }}" class="feedImg" src="{{ escape(cam['location']) }}"/></a>
                                 <script>
-                                    setInterval(function() {
-                                        document.getElementById("update-{{ escape(cam['name']) }}").src = '{{ escape(cam['location']) }}?' + + new Date().getTime();
-                                    }, 150);
+                                    {% if cam['localCamera'] == True %}
+                                        setInterval(function() {
+                                            document.getElementById("update-{{ escape(cam['name']) }}").src = '/feed/?' + + new Date().getTime();
+                                        }, 150);
+                                    {% else %}
+                                        setInterval(function() {
+                                            document.getElementById("update-{{ escape(cam['name']) }}").src = 'http://{{ escape(cam['location']) }}?' + + new Date().getTime();
+                                        }, 150);
+                                    {% end %}
                                 </script>
                                 <div class="row cameraInfo">
                                     <div class="six columns">{{ escape(cam['name']) }}</div>
