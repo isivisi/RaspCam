@@ -42,7 +42,7 @@ class PICam(Camera):
         startT = time.time()
         self.camera = picamera.PiCamera()
         print ("Camera initialized in %s" % str(time.time() - startT))
-        self.camera.resolution = self.resolution
+        #self.camera.resolution = self.resolution
 
         # set saved settings
         camSettings = raspcam.database.getCameras(local=True)[0]
