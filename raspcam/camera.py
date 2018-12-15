@@ -42,11 +42,12 @@ class PICam(Camera):
         startT = time.time()
         self.camera = picamera.PiCamera()
         print ("Camera initialized in %s" % str(time.time() - startT))
-        #self.camera.resolution = self.resolution
+        self.camera.resolution = self.resolution
 
         # set saved settings
         camSettings = raspcam.database.getCameras(local=True)[0]
-        self.camera.rotation = camSettings.rotation
+        if camSettings:
+            self.camera.rotation = camSettings.rotation
 
         # Begin camera loop
         if not NON_PI:
