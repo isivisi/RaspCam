@@ -149,7 +149,7 @@ class SettingsHandler(tornado.web.RequestHandler):
             if self.get_secure_cookie("user"):
                 userInfo = database.getUser(self.get_secure_cookie("user").decode("utf-8"))
                 # Only serve settings page to admin users
-                if userInfo and userInfo.isAdmin:
+                if userInfo and userInfo["isAdmin"]:
                     settings = database.getSettings()
                     self.render("web/settings.html", settings=settings)
                     return
