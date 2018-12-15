@@ -6,7 +6,7 @@ import threading
 import raspcam.database
 
 # for debugging without a raspberry pi
-NOT_PI = False
+NON_PI = False
 try:
 	import picamera
 except:
